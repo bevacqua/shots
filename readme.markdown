@@ -13,6 +13,7 @@ by leveraging [`waybackpack`][wbp] &mdash; a python program that pulls down the 
 # install
 
 ```shell
+pip install waybackpack
 npm i shots -S
 ```
 
