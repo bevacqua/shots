@@ -1,1 +1,4 @@
 node_modules
+sample/*/diffs/
+sample/*/pages/
+sample/*/screenshots/
