@@ -10,9 +10,9 @@ import GIFEncoder from 'gifencoder';
 import png from 'png-js';
 import assign from 'assignment';
 import Pageres from 'pageres';
-import Spritesmith from 'spritesmith';
 import histogram from 'histogram';
 import tmp from 'tmp';
+import gm from 'gm';
 import { promisify } from 'bluebird';
 import { exec } from 'child_process';
 import diff from 'image-diff-2';
@@ -215,12 +215,12 @@ function shots (options = {}) {
       }
       return Promise
         .all(buckets
-          .map(([size, src]) => new Promise((resolve, reject) => d(`creating ${size} spritesheet`, Spritesmith)
-          .run({ src, algorithm: 'left-right' }, (err, result) => err
+          .map(([size, src]) => new Promise((resolve, reject) => d(`creating ${size} spritesheet`, gm())
+          .append(...src, true)
+          .write(join(output, `${size}.png`), err => err
             ? reject(err)
-            : resolve(result.image)
+            : resolve()
           ))
-          .then(image => pwriteFile(join(output, `${size}.png`), image))
         ))
         .then(() => Promise
         .all(buckets

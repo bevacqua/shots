@@ -40,10 +40,6 @@ var _pageres = require('pageres');
 
 var _pageres2 = _interopRequireDefault(_pageres);
 
-var _spritesmith = require('spritesmith');
-
-var _spritesmith2 = _interopRequireDefault(_spritesmith);
-
 var _histogram = require('histogram');
 
 var _histogram2 = _interopRequireDefault(_histogram);
@@ -51,6 +47,10 @@ var _histogram2 = _interopRequireDefault(_histogram);
 var _tmp = require('tmp');
 
 var _tmp2 = _interopRequireDefault(_tmp);
+
+var _gm = require('gm');
+
+var _gm2 = _interopRequireDefault(_gm);
 
 var _bluebird = require('bluebird');
 
@@ -320,11 +320,11 @@ function shots() {
       var size = _ref14[0];
       var src = _ref14[1];
       return new Promise(function (resolve, reject) {
-        return d('creating ' + size + ' spritesheet', _spritesmith2.default).run({ src: src, algorithm: 'left-right' }, function (err, result) {
-          return err ? reject(err) : resolve(result.image);
+        var _d;
+
+        return (_d = d('creating ' + size + ' spritesheet', (0, _gm2.default)())).append.apply(_d, _toConsumableArray(src).concat([true])).write((0, _path.join)(output, size + '.png'), function (err) {
+          return err ? reject(err) : resolve();
         });
-      }).then(function (image) {
-        return pwriteFile((0, _path.join)(output, size + '.png'), image);
       });
     })).then(function () {
       return Promise.all(buckets.map(function (_ref15) {
