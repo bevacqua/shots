@@ -16,6 +16,9 @@
     "url": "https://github.com/bevacqua/shots/issues"
   },
   "homepage": "https://github.com/bevacqua/shots#readme",
+  "bin": {
+    "shots": "cli"
+  },
   "dependencies": {
     "assignment": "2.2.0",
     "bluebird": "3.3.5",
@@ -25,6 +28,7 @@
     "histogram": "2.0.2",
     "image-diff-2": "1.0.0",
     "lodash": "4.11.2",
+    "minimist": "1.2.0",
     "mkdirp": "0.5.1",
     "moment": "2.13.0",
     "pageres": "4.1.1",

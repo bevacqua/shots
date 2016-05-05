@@ -31,6 +31,37 @@ the `shots` function will return a `Promise` that'll resolve once an animated gi
 
 _you can specify different options._
 
+# cli
+
+fairly simple.
+
+```shell
+shots amazon.com
+```
+
+outputs the path to your resulting gif, something like:
+
+```
+/var/folders/k_/9_8vfx9d48g_mrv71w2gbbc80000gn/T/tmp-705763juvDuD6zE3F/output/1024x768.gif
+```
+
+has some options. run `shots` to print the following help text to your terminal.
+
+```
+must supply at least one site.
+
+usage:
+  shots <site> [options]
+
+options:
+  -o, --out, --output    output directory (random)
+  -c, --concurrency      concurrency level (6)
+  -t, --tolerance        image diff similarity tolerance, 0-100 (95)
+
+example:
+  shots amazon.com -o shots/amazon -c 12 -t 65
+```
+
 # api
 
 the `shots` api is exported as a single `shots(options)` function that returns a `Promise`. its `options` are outlined below.
@@ -54,6 +85,8 @@ shots().then(dest => {
 ## `options.concurrency`
 
 concurrency level used throughout the lib. determines how many screenshots are being taken at any given time, or how many diffs are being computed, etc.
+
+defaults to `6`.
 
 ## `options.pageres`
 

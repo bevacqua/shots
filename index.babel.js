@@ -97,13 +97,14 @@ function getPageres (opts) {
 
 function shots (options = {}) {
   const {
-    dest = tmp.dirSync(),
+    dest = tmp.dirSync().name,
     concurrency = 6,
     pageres: userPageresOpts,
     site,
     sites = [],
     tolerance = 95
   } = options;
+  d(`dest directory set to: ${dest}`);
   const prOpts = getPageresOpts(userPageresOpts);
   const threshold = (100 - tolerance) / 100 ; // [0..1] where 0=identical,1=different
   const pages = join(dest, 'pages');

@@ -1,0 +1,60 @@
+#!/usr/bin/env node
+
+'use strict';
+
+var path = require('path');
+var argv = require('minimist')(process.argv.slice(2), {
+  alias: {
+    output: ['out', 'o'],
+    concurrency: ['c'],
+    tolerance: ['t']
+  }
+});
+var shots = require('./').default;
+var sites = argv._;
+if (sites.length === 0) {
+  console.log([
+    'must supply at least one site.',
+    '',
+    'usage:',
+    '  shots <site> [options]',
+    '',
+    'options:',
+    '  -o, --out, --output    output directory (random)',
+    '  -c, --concurrency      concurrency level (6)',
+    '  -t, --tolerance        image diff similarity tolerance, 0-100 (95)',
+    '',
+    'example:',
+    '  shots amazon.com -o shots/amazon -c 12 -t 65'
+  ].join('\n'));
+  process.exit(1);
+  return;
+}
+
+var opts = {
+  sites: sites,
+  sizes: readSizes(),
+  dest: argv.output,
+  concurrency: argv.concurrency,
+  tolerance: argv.tolerance
+};
+
+shots(opts)
+  .then(function (base) {
+    opts.sizes.forEach(function (size) {
+      console.log(path.join(base, 'output', size + '.gif'));
+    });
+  })
+  .catch(function (err) {
+    console.log(err);
+    process.exit(1);
+  });
+
+function readSizes () {
+  if (typeof argv.sizes === 'string') {
+    return [argv.sizes];
+  } else if (!Array.isArray(argv.sizes)) {
+    return ['1024x768'];
+  }
+  return argv.sizes;
+}
