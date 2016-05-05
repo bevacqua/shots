@@ -1,6 +1,6 @@
 {
   "name": "shots",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "pull down the entire Internet into a single animated gif.",
   "main": "index.js",
   "scripts": {
