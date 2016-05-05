@@ -12,6 +12,7 @@ var argv = require('minimist')(process.argv.slice(2), {
     verbose: ['v']
   }
 });
+var shots = require('./').default;
 var sites = argv._;
 if (sites.length === 0) {
   console.log([
@@ -47,8 +48,6 @@ var opts = {
   concurrency: argv.concurrency,
   tolerance: argv.tolerance
 };
-
-var shots = require('./').default;
 
 shots(opts)
   .then(function (base) {

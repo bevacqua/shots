@@ -68,7 +68,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var debuglog = (0, _debug2.default)('shots');
 var pglob = (0, _bluebird.promisify)(_glob2.default);
 var pmkdirp = (0, _bluebird.promisify)(_mkdirp2.default);
 var prename = (0, _bluebird.promisify)(_fs.rename);
@@ -77,11 +76,6 @@ var rsep = new RegExp(_path.sep, 'g');
 var rsize = /\d+x\d+/;
 var rtimestamp = /\d{14}/;
 var timeformat = 'YYYYMMDDHHmmss';
-
-function d(message, result) {
-  debuglog(message);
-  return result;
-}
 
 function getStart(pageFiles) {
   var _sortByStamps = sortByStamps(pageFiles);
@@ -184,13 +178,10 @@ function getPageresOpts(pageresUser) {
   return (0, _assignment2.default)(pageresDefaults, pageresUser);
 }
 
-function getPageres(opts) {
-  d('creating pageres instance');
-  return new _pageres2.default(opts);
-}
-
 function shots() {
   var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+  var debuglog = (0, _debug2.default)('shots');
   var _options$dest = options.dest;
   var dest = _options$dest === undefined ? _tmp2.default.dirSync().name : _options$dest;
   var _options$concurrency = options.concurrency;
@@ -248,7 +239,7 @@ function shots() {
       return p.then(function () {
         return d('reducing chunk ' + (i + 1) + '/' + chunks.length + ', len=' + chunk.length, chunk).reduce(function (ctx, source) {
           return d('adding pageres src ' + source + ', sizes=' + sizes, ctx.src(source, sizes));
-        }, getPageres(prOpts)).dest(screenshots).run().then(function (streams) {
+        }, d('creating pageres instance', new _pageres2.default(prOpts))).dest(screenshots).run().then(function (streams) {
           return d('renaming streams, len=' + streams.length, Promise.all(streams.map(function (stream) {
             return d('renaming ' + stream.filename, prename((0, _path.join)(screenshots, stream.filename), (0, _path.join)(screenshots, stream.filename.replace(pages.replace(rsep, '!') + '!', '').replace(/\.html(-[\dx]+)[\w-]*\.png$/, '$1.html.png'))));
           })));
@@ -360,6 +351,11 @@ function shots() {
   }).catch(function (reason) {
     return d('ERR! ' + reason, Promise.reject(reason));
   });
+
+  function d(message, result) {
+    debuglog(message);
+    return result;
+  }
 }
 
 exports.default = shots;

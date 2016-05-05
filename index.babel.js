@@ -17,7 +17,6 @@ import { promisify } from 'bluebird';
 import { exec } from 'child_process';
 import diff from 'image-diff-2';
 import debug from 'debug';
-const debuglog = debug('shots');
 const pglob = promisify(glob);
 const pmkdirp = promisify(mkdirp);
 const prename = promisify(rename);
@@ -26,11 +25,6 @@ const rsep = new RegExp(sep, 'g');
 const rsize = /\d+x\d+/;
 const rtimestamp = /\d{14}/;
 const timeformat = 'YYYYMMDDHHmmss';
-
-function d (message, result) {
-  debuglog(message);
-  return result;
-}
 
 function getStart (pageFiles) {
   const [last] = sortByStamps(pageFiles);
@@ -90,12 +84,8 @@ function getPageresOpts (pageresUser) {
   return assign(pageresDefaults, pageresUser);
 }
 
-function getPageres (opts) {
-  d('creating pageres instance');
-  return new Pageres(opts);
-}
-
 function shots (options = {}) {
+  const debuglog = debug('shots');
   const {
     dest = tmp.dirSync().name,
     concurrency = 6,
@@ -151,7 +141,10 @@ function shots (options = {}) {
       )
     ))
     .then(chunks => chunks.reduce((p, chunk, i) => p.then(() => d(`reducing chunk ${i+1}/${chunks.length}, len=${chunk.length}`, chunk)
-      .reduce((ctx, source) => d(`adding pageres src ${source}, sizes=${sizes}`, ctx.src(source, sizes)), getPageres(prOpts))
+      .reduce((ctx, source) =>
+        d(`adding pageres src ${source}, sizes=${sizes}`, ctx.src(source, sizes)),
+        d('creating pageres instance', new Pageres(prOpts))
+      )
       .dest(screenshots)
       .run()
       .then(streams => d(`renaming streams, len=${streams.length}`, Promise.all(
@@ -246,6 +239,11 @@ function shots (options = {}) {
     })
     .then(() => d('done.', dest))
     .catch(reason => d(`ERR! ${reason}`, Promise.reject(reason)));
+
+  function d (message, result) {
+    debuglog(message);
+    return result;
+  }
 }
 
 export default shots;
