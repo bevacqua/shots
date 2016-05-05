@@ -58,9 +58,13 @@ options:
   -o, --out, --output    output directory (random)
   -c, --concurrency      concurrency level (6)
   -t, --tolerance        image diff similarity tolerance, 0-100 (95)
+  -v, --verbose          verbose mode, outputs debugging information
 
 example:
   shots amazon.com -o shots/amazon -c 12 -t 65
+
+output:
+  path/to/recording.gif
 ```
 
 # api

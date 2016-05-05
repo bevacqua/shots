@@ -2,15 +2,16 @@
 
 'use strict';
 
+var debug = require('debug');
 var path = require('path');
 var argv = require('minimist')(process.argv.slice(2), {
   alias: {
     output: ['out', 'o'],
     concurrency: ['c'],
-    tolerance: ['t']
+    tolerance: ['t'],
+    verbose: ['v']
   }
 });
-var shots = require('./').default;
 var sites = argv._;
 if (sites.length === 0) {
   console.log([
@@ -23,12 +24,20 @@ if (sites.length === 0) {
     '  -o, --out, --output    output directory (random)',
     '  -c, --concurrency      concurrency level (6)',
     '  -t, --tolerance        image diff similarity tolerance, 0-100 (95)',
+    '  -v, --verbose          verbose mode, outputs debugging information',
     '',
     'example:',
-    '  shots amazon.com -o shots/amazon -c 12 -t 65'
+    '  shots amazon.com -o shots/amazon -c 12 -t 65',
+    '',
+    'output:',
+    '  path/to/recording.gif'
   ].join('\n'));
   process.exit(1);
   return;
+}
+
+if (argv.verbose) {
+  debug.enable('shots');
 }
 
 var opts = {
@@ -38,6 +47,8 @@ var opts = {
   concurrency: argv.concurrency,
   tolerance: argv.tolerance
 };
+
+var shots = require('./').default;
 
 shots(opts)
   .then(function (base) {
