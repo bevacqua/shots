@@ -182,14 +182,14 @@ function shots() {
   var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
   var debuglog = (0, _debug2.default)('shots');
-  var _options$dest = options.dest;
-  var dest = _options$dest === undefined ? _tmp2.default.dirSync().name : _options$dest;
   var _options$concurrency = options.concurrency;
   var concurrency = _options$concurrency === undefined ? 6 : _options$concurrency;
+  var _options$dest = options.dest;
+  var dest = _options$dest === undefined ? _tmp2.default.dirSync().name : _options$dest;
   var userPageresOpts = options.pageres;
+  var reverse = options.reverse;
   var site = options.site;
-  var _options$sites = options.sites;
-  var sites = _options$sites === undefined ? [] : _options$sites;
+  var sites = options.sites;
   var _options$tolerance = options.tolerance;
   var tolerance = _options$tolerance === undefined ? 95 : _options$tolerance;
 
@@ -305,11 +305,20 @@ function shots() {
         return toSize(file) === size;
       })).reverse()];
     });
-    return Promise.all(buckets.map(function (_ref11) {
-      var _ref12 = _slicedToArray(_ref11, 2);
+    if (reverse) {
+      buckets.forEach(function (_ref11) {
+        var _ref12 = _slicedToArray(_ref11, 2);
 
-      var size = _ref12[0];
-      var src = _ref12[1];
+        var size = _ref12[0];
+        var src = _ref12[1];
+        return src.reverse();
+      });
+    }
+    return Promise.all(buckets.map(function (_ref13) {
+      var _ref14 = _slicedToArray(_ref13, 2);
+
+      var size = _ref14[0];
+      var src = _ref14[1];
       return new Promise(function (resolve, reject) {
         return d('creating ' + size + ' spritesheet', _spritesmith2.default).run({ src: src, algorithm: 'left-right' }, function (err, result) {
           return err ? reject(err) : resolve(result.image);
@@ -318,11 +327,11 @@ function shots() {
         return pwriteFile((0, _path.join)(output, size + '.png'), image);
       });
     })).then(function () {
-      return Promise.all(buckets.map(function (_ref13) {
-        var _ref14 = _slicedToArray(_ref13, 2);
+      return Promise.all(buckets.map(function (_ref15) {
+        var _ref16 = _slicedToArray(_ref15, 2);
 
-        var size = _ref14[0];
-        var src = _ref14[1];
+        var size = _ref16[0];
+        var src = _ref16[1];
         return d('creating ' + size + ' gif', Promise).all(src.map(function (file) {
           return new Promise(function (resolve) {
             return _pngJs2.default.decode(file, function (pixels) {

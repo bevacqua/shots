@@ -92,7 +92,7 @@ function shots (options = {}) {
     pageres: userPageresOpts,
     reverse,
     site,
-    sites = [],
+    sites,
     tolerance = 95
   } = options;
   d(`dest directory set to: ${dest}`);
@@ -211,7 +211,7 @@ function shots (options = {}) {
         sortByStamps(relevant.filter(file => toSize(file) === size)).reverse()
       ]));
       if (reverse) {
-        buckets = buckets.map(bucket => bucket.reverse());
+        buckets.forEach(([size, src]) => src.reverse());
       }
       return Promise
         .all(buckets
