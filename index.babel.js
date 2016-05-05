@@ -93,8 +93,16 @@ function shots (options = {}) {
     reverse,
     site,
     sites,
+    stages = {},
     tolerance = 95
   } = options;
+  const {
+    diffing: diffingStage = true,
+    download: downloadStage = true,
+    filmstrip: filmstripStage = true,
+    gif: gifStage = true,
+    screenshots: screenshotsStage = true
+  } = stages;
   d(`dest directory set to: ${dest}`);
   const prOpts = getPageresOpts(userPageresOpts);
   const threshold = (100 - tolerance) / 100 ; // [0..1] where 0=identical,1=different
@@ -117,87 +125,92 @@ function shots (options = {}) {
       d('pmkdirp(diffs)', pmkdirp(diffs)),
       d('pmkdirp(output)', pmkdirp(output))
     ])
-    .then(() => d(`rglob('${pages}/*.html')`, rglob(`${pages}/*.html`)))
-    .then(pageFiles => Promise
-      .all(domains
-      .map(site => new Promise((resolve, reject) => {
-        const cmd = `waybackpack ${site} -d ${pages} --start ${getStart(pageFiles)}`;
-        d(cmd);
-        exec(cmd, err => err ? reject(err) : resolve());
-      }))
-    ))
-    .then(() => Promise.all([
-      d(`rglob('${pages}/*.html')`, rglob(`${pages}/*.html`)),
-      d(`rglob('${screenshots}/*.html.png')`, rglob(`${screenshots}/*.html.png`))
-    ]))
-    .then(([sources, destinations]) => d(`shot chunk(sources) and filter, len=${sources.length}`,
-      chunk(
-        sources
-          .filter(source => destinations
-          .indexOf(`${source}.png`
-            .replace(`${pages}`, `${screenshots}`)
-            .replace(`.html.png`, `-${sizes[0]}.html.png`)
-          ) === -1),
-        Math.ceil(concurrency / sizes.length)
-      )
-    ))
-    .then(chunks => chunks.reduce((p, chunk, i) => p.then(() => d(`reducing chunk ${i+1}/${chunks.length}, len=${chunk.length}`, chunk)
-      .reduce((ctx, source) =>
-        d(`adding pageres src ${source}, sizes=${sizes}`, ctx.src(source, sizes)),
-        d('creating pageres instance', new Pageres(prOpts))
-      )
-      .dest(screenshots)
-      .run()
-      .then(streams => d(`renaming streams, len=${streams.length}`, Promise.all(
-        streams.map(stream => d(`renaming ${stream.filename}`, prename(
-          join(screenshots, stream.filename),
-          join(screenshots, stream.filename
-            .replace(`${pages.replace(rsep, '!')}!`, '')
-            .replace(/\.html(-[\dx]+)[\w-]*\.png$/, '$1.html.png')
-          )
-        )))
-      )))
-    ), d(`shot chunk reducer, len=${chunks.length}`, Promise.resolve())))
-    .then(() => d(`rglob('${screenshots}/*.html.png')`, rglob(`${screenshots}/*.html.png`)))
-    .then(screenshotFiles => d('sortBySize(sortByDomains(domainSlugs, screenshotFiles))',
-      sortBySize(sortByDomains(domainSlugs, screenshotFiles))
-      .reverse()
-      .map((screenshot, i) => ([
-        screenshot,
-        screenshotFiles[i - 1],
-        screenshot.replace(screenshots, diffs)
-      ]))
-      .slice(1)
-    ))
-    .then(comparisions => d(`diff chunk(comparisions, concurrency), len=${comparisions.length}`, chunk(comparisions, concurrency)))
-    .then(chunks => chunks.reduce((p, chunk, i) => p.then(ignores => Promise
-      .all(d(`reducing chunk ${i+1}/${chunks.length}, ignore=${ignores.length}`, chunk)
-      .map(([actualImage, expectedImage, diffImage], i) =>
-        new Promise((resolve, reject) => d(`diffing image reel ${i+1}/${chunk.length} [
-    actual ${actualImage}
-    expect ${expectedImage}
-    diff   ${diffImage} ]`,
-          diff({ actualImage, expectedImage, diffImage, threshold }, (err, same) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-            if (same) {
-              d(`diffed ${i+1}/${chunk.length} ${actualImage} [DUPE]`);
-              resolve(false);
-              return;
-            }
-            histogram(actualImage, (err, data) => err
-              ? d(`diffed ${i+1}/${chunk.length} ${actualImage} [ERR]`, reject(err))
-              : data.colors.rgb > 32
-                ? d(`diffed ${i+1}/${chunk.length} ${actualImage} [PASS]`, resolve(true))
-                : d(`diffed ${i+1}/${chunk.length} ${actualImage} [BLANK]`, resolve(false)));
-          })))
-          .then(passed => passed || ignores.push(actualImage))
+    .then(maybe('download', downloadStage, () => d(`rglob('${pages}/*.html')`, rglob(`${pages}/*.html`))
+      .then(pageFiles => Promise
+        .all(domains
+        .map(site => new Promise((resolve, reject) => {
+          const cmd = `waybackpack ${site} -d ${pages} --start ${getStart(pageFiles)}`;
+          d(cmd);
+          exec(cmd, err => err ? reject(err) : resolve());
+        }))
       ))
-      .then(() => ignores))
-    , d(`diff chunk reducer, len=${chunks.length}`, Promise.resolve([]))))
-    .then(ignores => d(`rglob('${screenshots}/*.html.png'), ignore=${ignores.length}`, rglob(`${screenshots}/*.html.png`))
+    ))
+    .then(maybe('screenshots', screenshotsStage, () => Promise
+      .all([
+        d(`rglob('${pages}/*.html')`, rglob(`${pages}/*.html`)),
+        d(`rglob('${screenshots}/*.html.png')`, rglob(`${screenshots}/*.html.png`))
+      ])
+      .then(([sources, destinations]) => d(`shot chunk(sources) and filter, len=${sources.length}`,
+        chunk(
+          sources
+            .filter(source => destinations
+            .indexOf(`${source}.png`
+              .replace(`${pages}`, `${screenshots}`)
+              .replace(`.html.png`, `-${sizes[0]}.html.png`)
+            ) === -1),
+          Math.ceil(concurrency / sizes.length)
+        )
+      ))
+      .then(chunks => chunks.reduce((p, chunk, i) => p.then(() => d(`reducing chunk ${i+1}/${chunks.length}, len=${chunk.length}`, chunk)
+        .reduce((ctx, source) =>
+          d(`adding pageres src ${source}, sizes=${sizes}`, ctx.src(source, sizes)),
+          d('creating pageres instance', new Pageres(prOpts))
+        )
+        .dest(screenshots)
+        .run()
+        .then(streams => d(`renaming streams, len=${streams.length}`, Promise.all(
+          streams.map(stream => d(`renaming ${stream.filename}`, prename(
+            join(screenshots, stream.filename),
+            join(screenshots, stream.filename
+              .replace(`${pages.replace(rsep, '!')}!`, '')
+              .replace(/\.html(-[\dx]+)[\w-]*\.png$/, '$1.html.png')
+            )
+          )))
+        )))
+      ), d(`shot chunk reducer, len=${chunks.length}`, Promise.resolve())))
+    ))
+    .then(maybe('diffing', diffingStage, () =>
+      d(`rglob('${screenshots}/*.html.png')`, rglob(`${screenshots}/*.html.png`))
+      .then(screenshotFiles => d('sortBySize(sortByDomains(domainSlugs, screenshotFiles))',
+        sortBySize(sortByDomains(domainSlugs, screenshotFiles))
+        .reverse()
+        .map((screenshot, i) => ([
+          screenshot,
+          screenshotFiles[i - 1],
+          screenshot.replace(screenshots, diffs)
+        ]))
+        .slice(1)
+      ))
+      .then(comparisions => d(`diff chunk(comparisions, concurrency), len=${comparisions.length}`, chunk(comparisions, concurrency)))
+      .then(chunks => chunks.reduce((p, chunk, i) => p.then(ignores => Promise
+        .all(d(`reducing chunk ${i+1}/${chunks.length}, ignore=${ignores.length}`, chunk)
+        .map(([actualImage, expectedImage, diffImage], i) =>
+          new Promise((resolve, reject) => d(`diffing image reel ${i+1}/${chunk.length} [
+      actual ${actualImage}
+      expect ${expectedImage}
+      diff   ${diffImage} ]`,
+            diff({ actualImage, expectedImage, diffImage, threshold }, (err, same) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              if (same) {
+                d(`diffed ${i+1}/${chunk.length} ${actualImage} [DUPE]`);
+                resolve(false);
+                return;
+              }
+              histogram(actualImage, (err, data) => err
+                ? d(`diffed ${i+1}/${chunk.length} ${actualImage} [ERR]`, reject(err))
+                : data.colors.rgb > 32
+                  ? d(`diffed ${i+1}/${chunk.length} ${actualImage} [PASS]`, resolve(true))
+                  : d(`diffed ${i+1}/${chunk.length} ${actualImage} [BLANK]`, resolve(false)));
+            })))
+            .then(passed => passed || ignores.push(actualImage))
+        ))
+        .then(() => ignores))
+      , d(`diff chunk reducer, len=${chunks.length}`, Promise.resolve([]))))
+    ))
+    .then((ignores = []) => d(`rglob('${screenshots}/*.html.png'), ignore=${ignores.length}`, rglob(`${screenshots}/*.html.png`))
       .then(screenshotFiles => ([
         screenshotFiles.filter(screenshot => ignores.indexOf(screenshot) === -1),
         screenshotFiles,
@@ -214,32 +227,35 @@ function shots (options = {}) {
         buckets.forEach(([size, src]) => src.reverse());
       }
       return Promise
-        .all(buckets
-          .map(([size, src]) => new Promise((resolve, reject) => d(`creating ${size} spritesheet`, gm())
-          .append(...src, true)
-          .write(join(output, `${size}.png`), err => err
-            ? reject(err)
-            : resolve()
+        .resolve()
+        .then(maybe('filmstrip', filmstripStage, () => Promise
+          .all(buckets
+            .map(([size, src]) => new Promise((resolve, reject) => d(`creating ${size} spritesheet`, gm())
+            .append(...src, true)
+            .write(join(output, `${size}.png`), err => err
+              ? reject(err)
+              : resolve()
+            ))
           ))
         ))
-        .then(() => Promise
-        .all(buckets
-          .map(([size, src]) => d(`creating ${size} gif`, Promise)
-          .all(src
-            .map(file => new Promise(resolve => png.decode(file, pixels => resolve(pixels))))
-          )
-          .then(frames => {
-            const rec = new GIFEncoder(...size.split('x').map(x => x * scale));
-            rec.start();
-            rec.setRepeat(0);
-            rec.setDelay(200);
-            frames.forEach(frame => rec.addFrame(frame));
-            rec.finish();
-            return rec.out.getData();
-          })
-          .then(image => pwriteFile(join(output, `${size}.gif`), image))
-        ))
-      );
+        .then(maybe('gif', gifStage, () => Promise
+          .all(buckets
+            .map(([size, src]) => d(`creating ${size} gif`, Promise)
+            .all(src
+              .map(file => new Promise(resolve => png.decode(file, pixels => resolve(pixels))))
+            )
+            .then(frames => {
+              const rec = new GIFEncoder(...size.split('x').map(x => x * scale));
+              rec.start();
+              rec.setRepeat(0);
+              rec.setDelay(200);
+              frames.forEach(frame => rec.addFrame(frame));
+              rec.finish();
+              return rec.out.getData();
+            })
+            .then(image => pwriteFile(join(output, `${size}.gif`), image))
+          ))
+        ));
     })
     .then(() => d('done.', dest))
     .catch(reason => d(`ERR! ${reason}`, Promise.reject(reason)));
@@ -247,6 +263,12 @@ function shots (options = {}) {
   function d (message, result) {
     debuglog(message);
     return result;
+  }
+
+  function maybe (name, enabled, op) {
+    return enabled
+      ? d(`resolving ${name} stage`, op)
+      : () => d(`skipping ${name} stage`, Promise.resolve());
   }
 }
 

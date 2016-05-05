@@ -60,6 +60,11 @@ options:
   -r, --reverse          reversed output, from present into the past
   -t, --tolerance        image diff similarity tolerance, 0-100 (95)
   -v, --verbose          verbose mode, outputs debugging information
+      --no-diffing       disables diffing stage
+      --no-download      disables download stage
+      --no-filmstrip     disables filmstrip stage
+      --no-gif           disables gif stage
+      --no-screenshots   disables screenshots stage
 
 example:
   shots amazon.com -o shots/amazon -c 12 -t 65
@@ -114,23 +119,39 @@ a site _(or any url, really)_ that you want to work with. can also be an array o
 
 alias for `options.sites`.
 
+## `options.stages`
+
+an object describing whether different stages of the `shots` process are enabled. set a stage to `false` to skip that stage. defaults:
+
+```json
+{
+  "download": true,
+  "screenshots": true,
+  "diffing": true,
+  "filmstrip": true,
+  "gif": true
+}
+```
+
+see [stages](#stages) for more info on each stage.
+
 ## `options.tolerance`
 
 number between `0` and `100` where `100` means every screenshot will be considered different, whereas `0` means every screenshot will be considered the same. only "duplicate" screenshots (within the tolerated range) will be used when building the gif and filmstrip image.
 
-# steps
+# stages
 
 <sub>note that `shots` has a long runtime, due to the nature of the task it performs. be prepared to wait a few minutes until the gif is finally written to disk.</sub>
 
 the following steps happen in series. the tasks in each step are executed concurrently where possible.
 
-- runs `waybackpack` for every provided `options.site`, starting at the last timestamp that can be found in the `${dest}/pages` directory to save time
-- takes screenshots of every archive page, except for pages we have existing screenshots for at `${dest}/screenshots`
-- computes difference between every screenshot and the previous ones
+- `[download]` runs `waybackpack` for every provided `options.site`, starting at the last timestamp that can be found in the `${dest}/pages` directory to save time
+- `[screenshots]` takes screenshots of every archive page, except for pages we have existing screenshots for at `${dest}/screenshots`
+- `[diffing]` computes difference between every screenshot and the previous ones
   - screenshots considered to be the same according to `tolerance` are discarded
   - screenshots considered to be noise _(e.g: failed page loads)_ are discarded
-- creates the filmstrip
-- creates the gif
+- `[filmstrip]` creates the filmstrip
+- `[gif]` creates the gif
 
 # debugging and logging
 

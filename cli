@@ -13,6 +13,7 @@ var argv = require('minimist')(process.argv.slice(2), {
     verbose: ['v']
   }
 });
+
 var shots = require('./').default;
 var sites = argv._;
 if (sites.length === 0) {
@@ -28,6 +29,11 @@ if (sites.length === 0) {
     '  -r, --reverse          reversed output, from present into the past',
     '  -t, --tolerance        image diff similarity tolerance, 0-100 (95)',
     '  -v, --verbose          verbose mode, outputs debugging information',
+    '      --no-diffing       disables diffing stage',
+    '      --no-download      disables download stage',
+    '      --no-filmstrip     disables filmstrip stage',
+    '      --no-gif           disables gif stage',
+    '      --no-screenshots   disables screenshots stage',
     '',
     'example:',
     '  shots amazon.com -o shots/amazon -c 12 -t 65',
@@ -49,6 +55,13 @@ var opts = {
   reverse: argv.reverse,
   sites: sites,
   sizes: readSizes(),
+  stages: {
+    diffing: argv.diffing,
+    download: argv.download,
+    filmstrip: argv.filmstrip,
+    gif: argv.gif,
+    screenshots: argv.screenshots
+  },
   tolerance: argv.tolerance
 };
 

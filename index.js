@@ -190,8 +190,20 @@ function shots() {
   var reverse = options.reverse;
   var site = options.site;
   var sites = options.sites;
+  var _options$stages = options.stages;
+  var stages = _options$stages === undefined ? {} : _options$stages;
   var _options$tolerance = options.tolerance;
   var tolerance = _options$tolerance === undefined ? 95 : _options$tolerance;
+  var _stages$diffing = stages.diffing;
+  var diffingStage = _stages$diffing === undefined ? true : _stages$diffing;
+  var _stages$download = stages.download;
+  var downloadStage = _stages$download === undefined ? true : _stages$download;
+  var _stages$filmstrip = stages.filmstrip;
+  var filmstripStage = _stages$filmstrip === undefined ? true : _stages$filmstrip;
+  var _stages$gif = stages.gif;
+  var gifStage = _stages$gif === undefined ? true : _stages$gif;
+  var _stages$screenshots = stages.screenshots;
+  var screenshotsStage = _stages$screenshots === undefined ? true : _stages$screenshots;
 
   d('dest directory set to: ' + dest);
   var prOpts = getPageresOpts(userPageresOpts);
@@ -212,81 +224,82 @@ function shots() {
     });
   };
 
-  return Promise.all([d('pmkdirp(pages)', pmkdirp(pages)), d('pmkdirp(screenshots)', pmkdirp(screenshots)), d('pmkdirp(diffs)', pmkdirp(diffs)), d('pmkdirp(output)', pmkdirp(output))]).then(function () {
-    return d('rglob(\'' + pages + '/*.html\')', rglob(pages + '/*.html'));
-  }).then(function (pageFiles) {
-    return Promise.all(domains.map(function (site) {
-      return new Promise(function (resolve, reject) {
-        var cmd = 'waybackpack ' + site + ' -d ' + pages + ' --start ' + getStart(pageFiles);
-        d(cmd);
-        (0, _child_process.exec)(cmd, function (err) {
-          return err ? reject(err) : resolve();
-        });
-      });
-    }));
-  }).then(function () {
-    return Promise.all([d('rglob(\'' + pages + '/*.html\')', rglob(pages + '/*.html')), d('rglob(\'' + screenshots + '/*.html.png\')', rglob(screenshots + '/*.html.png'))]);
-  }).then(function (_ref5) {
-    var _ref6 = _slicedToArray(_ref5, 2);
-
-    var sources = _ref6[0];
-    var destinations = _ref6[1];
-    return d('shot chunk(sources) and filter, len=' + sources.length, (0, _lodash.chunk)(sources.filter(function (source) {
-      return destinations.indexOf((source + '.png').replace('' + pages, '' + screenshots).replace('.html.png', '-' + sizes[0] + '.html.png')) === -1;
-    }), Math.ceil(concurrency / sizes.length)));
-  }).then(function (chunks) {
-    return chunks.reduce(function (p, chunk, i) {
-      return p.then(function () {
-        return d('reducing chunk ' + (i + 1) + '/' + chunks.length + ', len=' + chunk.length, chunk).reduce(function (ctx, source) {
-          return d('adding pageres src ' + source + ', sizes=' + sizes, ctx.src(source, sizes));
-        }, d('creating pageres instance', new _pageres2.default(prOpts))).dest(screenshots).run().then(function (streams) {
-          return d('renaming streams, len=' + streams.length, Promise.all(streams.map(function (stream) {
-            return d('renaming ' + stream.filename, prename((0, _path.join)(screenshots, stream.filename), (0, _path.join)(screenshots, stream.filename.replace(pages.replace(rsep, '!') + '!', '').replace(/\.html(-[\dx]+)[\w-]*\.png$/, '$1.html.png'))));
-          })));
-        });
-      });
-    }, d('shot chunk reducer, len=' + chunks.length, Promise.resolve()));
-  }).then(function () {
-    return d('rglob(\'' + screenshots + '/*.html.png\')', rglob(screenshots + '/*.html.png'));
-  }).then(function (screenshotFiles) {
-    return d('sortBySize(sortByDomains(domainSlugs, screenshotFiles))', sortBySize(sortByDomains(domainSlugs, screenshotFiles)).reverse().map(function (screenshot, i) {
-      return [screenshot, screenshotFiles[i - 1], screenshot.replace(screenshots, diffs)];
-    }).slice(1));
-  }).then(function (comparisions) {
-    return d('diff chunk(comparisions, concurrency), len=' + comparisions.length, (0, _lodash.chunk)(comparisions, concurrency));
-  }).then(function (chunks) {
-    return chunks.reduce(function (p, chunk, i) {
-      return p.then(function (ignores) {
-        return Promise.all(d('reducing chunk ' + (i + 1) + '/' + chunks.length + ', ignore=' + ignores.length, chunk).map(function (_ref7, i) {
-          var _ref8 = _slicedToArray(_ref7, 3);
-
-          var actualImage = _ref8[0];
-          var expectedImage = _ref8[1];
-          var diffImage = _ref8[2];
-          return new Promise(function (resolve, reject) {
-            return d('diffing image reel ' + (i + 1) + '/' + chunk.length + ' [\n    actual ' + actualImage + '\n    expect ' + expectedImage + '\n    diff   ' + diffImage + ' ]', (0, _imageDiff2.default)({ actualImage: actualImage, expectedImage: expectedImage, diffImage: diffImage, threshold: threshold }, function (err, same) {
-              if (err) {
-                reject(err);
-                return;
-              }
-              if (same) {
-                d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [DUPE]');
-                resolve(false);
-                return;
-              }
-              (0, _histogram2.default)(actualImage, function (err, data) {
-                return err ? d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [ERR]', reject(err)) : data.colors.rgb > 32 ? d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [PASS]', resolve(true)) : d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [BLANK]', resolve(false));
-              });
-            }));
-          }).then(function (passed) {
-            return passed || ignores.push(actualImage);
+  return Promise.all([d('pmkdirp(pages)', pmkdirp(pages)), d('pmkdirp(screenshots)', pmkdirp(screenshots)), d('pmkdirp(diffs)', pmkdirp(diffs)), d('pmkdirp(output)', pmkdirp(output))]).then(maybe('download', downloadStage, function () {
+    return d('rglob(\'' + pages + '/*.html\')', rglob(pages + '/*.html')).then(function (pageFiles) {
+      return Promise.all(domains.map(function (site) {
+        return new Promise(function (resolve, reject) {
+          var cmd = 'waybackpack ' + site + ' -d ' + pages + ' --start ' + getStart(pageFiles);
+          d(cmd);
+          (0, _child_process.exec)(cmd, function (err) {
+            return err ? reject(err) : resolve();
           });
-        })).then(function () {
-          return ignores;
         });
-      });
-    }, d('diff chunk reducer, len=' + chunks.length, Promise.resolve([])));
-  }).then(function (ignores) {
+      }));
+    });
+  })).then(maybe('screenshots', screenshotsStage, function () {
+    return Promise.all([d('rglob(\'' + pages + '/*.html\')', rglob(pages + '/*.html')), d('rglob(\'' + screenshots + '/*.html.png\')', rglob(screenshots + '/*.html.png'))]).then(function (_ref5) {
+      var _ref6 = _slicedToArray(_ref5, 2);
+
+      var sources = _ref6[0];
+      var destinations = _ref6[1];
+      return d('shot chunk(sources) and filter, len=' + sources.length, (0, _lodash.chunk)(sources.filter(function (source) {
+        return destinations.indexOf((source + '.png').replace('' + pages, '' + screenshots).replace('.html.png', '-' + sizes[0] + '.html.png')) === -1;
+      }), Math.ceil(concurrency / sizes.length)));
+    }).then(function (chunks) {
+      return chunks.reduce(function (p, chunk, i) {
+        return p.then(function () {
+          return d('reducing chunk ' + (i + 1) + '/' + chunks.length + ', len=' + chunk.length, chunk).reduce(function (ctx, source) {
+            return d('adding pageres src ' + source + ', sizes=' + sizes, ctx.src(source, sizes));
+          }, d('creating pageres instance', new _pageres2.default(prOpts))).dest(screenshots).run().then(function (streams) {
+            return d('renaming streams, len=' + streams.length, Promise.all(streams.map(function (stream) {
+              return d('renaming ' + stream.filename, prename((0, _path.join)(screenshots, stream.filename), (0, _path.join)(screenshots, stream.filename.replace(pages.replace(rsep, '!') + '!', '').replace(/\.html(-[\dx]+)[\w-]*\.png$/, '$1.html.png'))));
+            })));
+          });
+        });
+      }, d('shot chunk reducer, len=' + chunks.length, Promise.resolve()));
+    });
+  })).then(maybe('diffing', diffingStage, function () {
+    return d('rglob(\'' + screenshots + '/*.html.png\')', rglob(screenshots + '/*.html.png')).then(function (screenshotFiles) {
+      return d('sortBySize(sortByDomains(domainSlugs, screenshotFiles))', sortBySize(sortByDomains(domainSlugs, screenshotFiles)).reverse().map(function (screenshot, i) {
+        return [screenshot, screenshotFiles[i - 1], screenshot.replace(screenshots, diffs)];
+      }).slice(1));
+    }).then(function (comparisions) {
+      return d('diff chunk(comparisions, concurrency), len=' + comparisions.length, (0, _lodash.chunk)(comparisions, concurrency));
+    }).then(function (chunks) {
+      return chunks.reduce(function (p, chunk, i) {
+        return p.then(function (ignores) {
+          return Promise.all(d('reducing chunk ' + (i + 1) + '/' + chunks.length + ', ignore=' + ignores.length, chunk).map(function (_ref7, i) {
+            var _ref8 = _slicedToArray(_ref7, 3);
+
+            var actualImage = _ref8[0];
+            var expectedImage = _ref8[1];
+            var diffImage = _ref8[2];
+            return new Promise(function (resolve, reject) {
+              return d('diffing image reel ' + (i + 1) + '/' + chunk.length + ' [\n      actual ' + actualImage + '\n      expect ' + expectedImage + '\n      diff   ' + diffImage + ' ]', (0, _imageDiff2.default)({ actualImage: actualImage, expectedImage: expectedImage, diffImage: diffImage, threshold: threshold }, function (err, same) {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+                if (same) {
+                  d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [DUPE]');
+                  resolve(false);
+                  return;
+                }
+                (0, _histogram2.default)(actualImage, function (err, data) {
+                  return err ? d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [ERR]', reject(err)) : data.colors.rgb > 32 ? d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [PASS]', resolve(true)) : d('diffed ' + (i + 1) + '/' + chunk.length + ' ' + actualImage + ' [BLANK]', resolve(false));
+                });
+              }));
+            }).then(function (passed) {
+              return passed || ignores.push(actualImage);
+            });
+          })).then(function () {
+            return ignores;
+          });
+        });
+      }, d('diff chunk reducer, len=' + chunks.length, Promise.resolve([])));
+    });
+  })).then(function () {
+    var ignores = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
     return d('rglob(\'' + screenshots + '/*.html.png\'), ignore=' + ignores.length, rglob(screenshots + '/*.html.png')).then(function (screenshotFiles) {
       return [screenshotFiles.filter(function (screenshot) {
         return ignores.indexOf(screenshot) === -1;
@@ -314,19 +327,21 @@ function shots() {
         return src.reverse();
       });
     }
-    return Promise.all(buckets.map(function (_ref13) {
-      var _ref14 = _slicedToArray(_ref13, 2);
+    return Promise.resolve().then(maybe('filmstrip', filmstripStage, function () {
+      return Promise.all(buckets.map(function (_ref13) {
+        var _ref14 = _slicedToArray(_ref13, 2);
 
-      var size = _ref14[0];
-      var src = _ref14[1];
-      return new Promise(function (resolve, reject) {
-        var _d;
+        var size = _ref14[0];
+        var src = _ref14[1];
+        return new Promise(function (resolve, reject) {
+          var _d;
 
-        return (_d = d('creating ' + size + ' spritesheet', (0, _gm2.default)())).append.apply(_d, _toConsumableArray(src).concat([true])).write((0, _path.join)(output, size + '.png'), function (err) {
-          return err ? reject(err) : resolve();
+          return (_d = d('creating ' + size + ' spritesheet', (0, _gm2.default)())).append.apply(_d, _toConsumableArray(src).concat([true])).write((0, _path.join)(output, size + '.png'), function (err) {
+            return err ? reject(err) : resolve();
+          });
         });
-      });
-    })).then(function () {
+      }));
+    })).then(maybe('gif', gifStage, function () {
       return Promise.all(buckets.map(function (_ref15) {
         var _ref16 = _slicedToArray(_ref15, 2);
 
@@ -354,7 +369,7 @@ function shots() {
           return pwriteFile((0, _path.join)(output, size + '.gif'), image);
         });
       }));
-    });
+    }));
   }).then(function () {
     return d('done.', dest);
   }).catch(function (reason) {
@@ -364,6 +379,12 @@ function shots() {
   function d(message, result) {
     debuglog(message);
     return result;
+  }
+
+  function maybe(name, enabled, op) {
+    return enabled ? d('resolving ' + name + ' stage', op) : function () {
+      return d('skipping ' + name + ' stage', Promise.resolve());
+    };
   }
 }
 
