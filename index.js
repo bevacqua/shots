@@ -192,7 +192,7 @@ function getPageres(opts) {
 function shots() {
   var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
   var _options$dest = options.dest;
-  var dest = _options$dest === undefined ? _tmp2.default.dirSync() : _options$dest;
+  var dest = _options$dest === undefined ? _tmp2.default.dirSync().name : _options$dest;
   var _options$concurrency = options.concurrency;
   var concurrency = _options$concurrency === undefined ? 6 : _options$concurrency;
   var userPageresOpts = options.pageres;
@@ -202,6 +202,7 @@ function shots() {
   var _options$tolerance = options.tolerance;
   var tolerance = _options$tolerance === undefined ? 95 : _options$tolerance;
 
+  d('dest directory set to: ' + dest);
   var prOpts = getPageresOpts(userPageresOpts);
   var threshold = (100 - tolerance) / 100; // [0..1] where 0=identical,1=different
   var pages = (0, _path.join)(dest, 'pages');
