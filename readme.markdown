@@ -136,6 +136,8 @@ the following steps happen in series. the tasks in each step are executed concur
 
 if you want to print debugging statements, `shots` uses `debug`, so you can do `DEBUG=shots node app` and you'll see tons of debug information pop into your screen.
 
+you need `cairo` bindings installed and `imagemagick` installed and available in your path.
+
 # license
 
 mit
