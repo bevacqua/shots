@@ -87,9 +87,10 @@ function getPageresOpts (pageresUser) {
 function shots (options = {}) {
   const debuglog = debug('shots');
   const {
-    dest = tmp.dirSync().name,
     concurrency = 6,
+    dest = tmp.dirSync().name,
     pageres: userPageresOpts,
+    reverse,
     site,
     sites = [],
     tolerance = 95
@@ -209,6 +210,9 @@ function shots (options = {}) {
         size,
         sortByStamps(relevant.filter(file => toSize(file) === size)).reverse()
       ]));
+      if (reverse) {
+        buckets = buckets.map(bucket => bucket.reverse());
+      }
       return Promise
         .all(buckets
           .map(([size, src]) => new Promise((resolve, reject) => d(`creating ${size} spritesheet`, Spritesmith)

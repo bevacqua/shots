@@ -55,8 +55,9 @@ usage:
   shots <site> [options]
 
 options:
-  -o, --out, --output    output directory (random)
   -c, --concurrency      concurrency level (6)
+  -o, --out, --output    output directory (random)
+  -r, --reverse          reversed output, from present into the past
   -t, --tolerance        image diff similarity tolerance, 0-100 (95)
   -v, --verbose          verbose mode, outputs debugging information
 

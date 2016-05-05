@@ -6,8 +6,9 @@ var debug = require('debug');
 var path = require('path');
 var argv = require('minimist')(process.argv.slice(2), {
   alias: {
-    output: ['out', 'o'],
     concurrency: ['c'],
+    output: ['out', 'o'],
+    reverse: ['r'],
     tolerance: ['t'],
     verbose: ['v']
   }
@@ -22,8 +23,9 @@ if (sites.length === 0) {
     '  shots <site> [options]',
     '',
     'options:',
-    '  -o, --out, --output    output directory (random)',
     '  -c, --concurrency      concurrency level (6)',
+    '  -o, --out, --output    output directory (random)',
+    '  -r, --reverse          reversed output, from present into the past',
     '  -t, --tolerance        image diff similarity tolerance, 0-100 (95)',
     '  -v, --verbose          verbose mode, outputs debugging information',
     '',
@@ -42,10 +44,11 @@ if (argv.verbose) {
 }
 
 var opts = {
+  concurrency: argv.concurrency,
+  dest: argv.output,
+  reverse: argv.reverse,
   sites: sites,
   sizes: readSizes(),
-  dest: argv.output,
-  concurrency: argv.concurrency,
   tolerance: argv.tolerance
 };
 
