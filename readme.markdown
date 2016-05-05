@@ -136,6 +136,31 @@ the following steps happen in series. the tasks in each step are executed concur
 
 if you want to print debugging statements, `shots` uses `debug`, so you can do `DEBUG=shots node app` and you'll see tons of debug information pop into your screen.
 
+# troubleshooting
+
+**On OSX: Package 'cairo' missing**
+
+Shots uses the canvas npm package which requires the cairo package.  OSX does not come with this package by default. You can install it using `brew install cairo`. If you do not install cairo before running the shots install, you will be greated with the following error messages:
+
+```
+Package cairo was not found in the pkg-config search path.
+Perhaps you should add the directory containing `cairo.pc'
+to the PKG_CONFIG_PATH environment variable
+No package 'cairo' found
+gyp: Call to './util/has_lib.sh freetype' returned exit status 0 while in binding.gyp. while trying to load binding.gyp
+gyp ERR! configure error
+gyp ERR! stack Error: `gyp` failed with exit code: 1
+
+...
+
+npm ERR! canvas@1.3.12 install: `node-gyp rebuild`
+npm ERR! Exit status 1
+npm ERR!
+npm ERR! Failed at the canvas@1.3.12 install script 'node-gyp rebuild'.
+npm ERR! This is most likely a problem with the canvas package,
+npm ERR! not with npm itself.
+```
+
 # license
 
 mit
