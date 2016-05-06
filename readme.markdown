@@ -10,6 +10,8 @@ by leveraging [`waybackpack`][wbp] &mdash; a python program that pulls down the 
 
 [![evolution of ponyfoo.com over time][evo]][web]
 
+[![evolution of amazon.com over time][evo]][ama]
+
 # install
 
 ```shell
@@ -167,3 +169,4 @@ mit
 [web]: https://ponyfoo.com
 [wbp]: https://github.com/jsvine/waybackpack
 [pr]: https://github.com/sindresorhus/pageres
+[ama]: https://github.com/bevacqua/shots/blob/master/sample/amazon/output/1024x768.gif
