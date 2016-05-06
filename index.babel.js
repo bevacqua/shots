@@ -267,7 +267,7 @@ function shots (options = {}) {
 
   function maybe (name, enabled, op) {
     return enabled
-      ? d(`resolving ${name} stage`, op)
+      ? () => d(`entering ${name} stage`, op())
       : () => d(`skipping ${name} stage`, Promise.resolve());
   }
 }

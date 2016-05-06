@@ -382,7 +382,9 @@ function shots() {
   }
 
   function maybe(name, enabled, op) {
-    return enabled ? d('resolving ' + name + ' stage', op) : function () {
+    return enabled ? function () {
+      return d('resolving ' + name + ' stage', op());
+    } : function () {
       return d('skipping ' + name + ' stage', Promise.resolve());
     };
   }
