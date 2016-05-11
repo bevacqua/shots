@@ -167,6 +167,7 @@ function shots (options = {}) {
             )
           )))
         )))
+      .catch(reason => d(`ERR! ${reason}`))
       ), d(`shot chunk reducer, len=${chunks.length}`, Promise.resolve())))
     ))
     .then(maybe('diffing', diffingStage, () =>
