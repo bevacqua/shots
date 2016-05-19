@@ -15,7 +15,7 @@ by leveraging [`waybackpack`][wbp] &mdash; a python program that pulls down the 
 # install
 
 ```shell
-pip install waybackpack
+pip install waybackpack==0.1.1
 npm i shots -S
 ```
 
