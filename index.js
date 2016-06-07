@@ -254,6 +254,8 @@ function shots() {
             return d('renaming streams, len=' + streams.length, Promise.all(streams.map(function (stream) {
               return d('renaming ' + stream.filename, prename((0, _path.join)(screenshots, stream.filename), (0, _path.join)(screenshots, stream.filename.replace(pages.replace(rsep, '!') + '!', '').replace(/\.html(-[\dx]+)[\w-]*\.png$/, '$1.html.png'))));
             })));
+          }).catch(function (reason) {
+            return d('ERR! ' + reason);
           });
         });
       }, d('shot chunk reducer, len=' + chunks.length, Promise.resolve()));
@@ -383,7 +385,7 @@ function shots() {
 
   function maybe(name, enabled, op) {
     return enabled ? function () {
-      return d('resolving ' + name + ' stage', op());
+      return d('entering ' + name + ' stage', op());
     } : function () {
       return d('skipping ' + name + ' stage', Promise.resolve());
     };
